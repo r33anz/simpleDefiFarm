@@ -12,8 +12,10 @@ contract TokenFarm{
     DappToken public dappToken;
     LPToken public lpToken;
 
-    uint256 public constant REWARD_PER_BLOCK = 1e18;
+    uint256 public REWARD_PER_BLOCK = 1e18;
+    uint256 constant FEE_PERCENTAGE = 1;
     uint256 public totalStakingBalance;
+    uint256 public totalFees;
     address[] public stakers;
 
     mapping (address => uint256) public stakingBalance;
@@ -85,19 +87,21 @@ contract TokenFarm{
 
         pendingRewards[msg.sender] = 0;
         dappToken.mint(msg.sender, pendingAmount);
-        
+
         emit Withdraw(msg.sender,_amountStaked,block.timestamp);
     }
 
     function  claimReward() external {
         uint256 pendingAmount = pendingRewards[msg.sender];
-        
+        uint256 pendingAmountLessFee = pendingAmount - (pendingAmount * FEE_PERCENTAGE / 100);
+
+        totalFees += pendingAmount - pendingAmountLessFee ;
         require(pendingAmount > 0, "No hay saldo para retirar.");
 
         pendingRewards[msg.sender] = 0;
-        dappToken.mint(msg.sender, pendingAmount);
+        dappToken.mint(msg.sender, pendingAmountLessFee);
 
-        emit ClaimReward(msg.sender,pendingAmount,block.timestamp);
+        emit ClaimReward(msg.sender,pendingAmountLessFee,block.timestamp);
     }
 
     function distributeRewardsAll() external onlyOwner{
@@ -128,5 +132,17 @@ contract TokenFarm{
     // Solo el owner del TokenFarm puede llamar esta función
     function transferDappTokenOwnership(address newOwner) external onlyOwner {
         dappToken.transferOwnership(newOwner);
+    }
+
+    function changeRewardPerBlock(uint256 newReward) external onlyOwner {
+        require(newReward > 0.1e18 , "El nuevo valor debe ser mayor a 0.1 tokens .");
+        REWARD_PER_BLOCK = newReward;
+    }
+
+    function claimFees() external onlyOwner{
+        require(totalFees > 0, "No hay fees para reclamar.");
+        uint256 feesToClaim = totalFees;
+        totalFees = 0;
+        dappToken.mint(owner, feesToClaim);
     }
 }
