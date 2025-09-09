@@ -102,12 +102,12 @@ contract TokenFarmTestDistributeReward is Test {
         console.log("Balance inicial del farm", initialDappBalance);
         vm.prank(user1);
         tokenFarm.claimReward();
-        
+        uint256 feePerClaim = (pendingRewards/100 *1);
         // Verificar que las recompensas se mintearon y transfirieron
         assertEq(tokenFarm.pendingRewards(user1), 0, "Pending rewards deberia ser 0");
         assertEq(
             dappToken.balanceOf(user1), 
-            initialDappBalance + pendingRewards, 
+            initialDappBalance + pendingRewards - feePerClaim, 
             "Usuario deberia recibir DAPP tokens"
         );
     }
