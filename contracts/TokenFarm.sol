@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.22;
+pragma solidity ^0.8.28;
 
 import './DappToken.sol';
 import './LPToken.sol';
@@ -32,10 +32,15 @@ contract TokenFarm{
         _;
     }
 
-    constructor(DappToken _dappToken, LPToken _lpToken,address _owner) {
+    modifier userIsStaking(){
+        require(isStaking[msg.sender] == true,"USted no esta realizando staking.");
+        _;
+    }
+
+    constructor(DappToken _dappToken, LPToken _lpToken) {
         dappToken = _dappToken;
         lpToken = _lpToken;
-        owner = _owner;
+        owner = msg.sender;
     }
 
     function deposit(uint256 _amount)external{
@@ -47,6 +52,7 @@ contract TokenFarm{
 
         if(!hasStaked[msg.sender]){
             hasStaked[msg.sender] = true;
+            stakers.push(msg.sender);
         }
 
         isStaking[msg.sender] = true;
@@ -61,9 +67,8 @@ contract TokenFarm{
 
     }
 
-    function withdraw()external{
-        require(isStaking[msg.sender] == true,"No esta realizando staking.");
-
+    function withdraw()external userIsStaking{
+    
         uint256 _amountStaked = stakingBalance[msg.sender];
         require (_amountStaked > 0,"No tiene saldo en staking.");
         
@@ -102,11 +107,15 @@ contract TokenFarm{
         uint256 checkpoint = checkpoints[_sender];
         uint256 bloquesPasados = block.number - checkpoint;
 
-        uint256 percentage = stakingBalance[_sender] / totalStakingBalance; 
-        uint256 reward = REWARD_PER_BLOCK * bloquesPasados * percentage;
-
-        pendingRewards[_sender] = reward;
+        uint256 userStake = stakingBalance[_sender];
+        uint256 reward = (REWARD_PER_BLOCK * bloquesPasados * userStake) / totalStakingBalance;
+            
+        pendingRewards[_sender] += reward;
         checkpoints[_sender] = block.number;
+    }
+
+    function getStakersCount() external view returns (uint256) {
+        return stakers.length;
     }
 
 }
