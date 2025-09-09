@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.22;
+pragma solidity ^0.8.28;
 
 import "forge-std/Test.sol";
 import "./DappToken.sol";
 import "./LPToken.sol";
 import "./TokenFarm.sol";
 
-contract TokenFarmTest is Test {
+contract TokenFarmTestMintDeposit is Test {
     DappToken public dappToken;
     LPToken public lpToken;
     TokenFarm public tokenFarm;

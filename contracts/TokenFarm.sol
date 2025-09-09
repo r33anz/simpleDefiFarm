@@ -118,4 +118,8 @@ contract TokenFarm{
         return stakers.length;
     }
 
+    // Solo el owner del TokenFarm puede llamar esta función
+    function transferDappTokenOwnership(address newOwner) external onlyOwner {
+        dappToken.transferOwnership(newOwner);
+    }
 }
