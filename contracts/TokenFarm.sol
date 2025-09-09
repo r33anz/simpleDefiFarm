@@ -78,7 +78,14 @@ contract TokenFarm{
         totalStakingBalance -= _amountStaked;
         isStaking[msg.sender] = false;
         lpToken.transfer(msg.sender, _amountStaked);
+        
+        uint256 pendingAmount = pendingRewards[msg.sender];
+        
+        require(pendingAmount > 0, "No hay saldo para retirar.");
 
+        pendingRewards[msg.sender] = 0;
+        dappToken.mint(msg.sender, pendingAmount);
+        
         emit Withdraw(msg.sender,_amountStaked,block.timestamp);
     }
 
